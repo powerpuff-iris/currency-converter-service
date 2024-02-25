@@ -2,27 +2,29 @@ package demo.currencyconverter.service.impl;
 
 import demo.currencyconverter.dto.ConversionResponse;
 import demo.currencyconverter.dto.ExchangeRatesResponse;
+import demo.currencyconverter.feign.ExchangeRatesClient;
 import demo.currencyconverter.service.ConverterService;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class ConverterServiceImpl implements ConverterService {
 
     @Value("${api.exchangerates.api-key}")
     private String apiKey;
     @Value("${api.exchangerates.base-url}")
     private String baseUrl;
-    private final CircuitBreaker circuitBreaker;
 
-    public ConverterServiceImpl(CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = circuitBreaker;
-    }
+    @Autowired
+    private ExchangeRatesClient exchangeRatesClient;
 
     @Override
     public ConversionResponse convert(String baseCurrency, String targetCurrency, BigDecimal amount) {
@@ -36,7 +38,7 @@ public class ConverterServiceImpl implements ConverterService {
         RestTemplate restTemplate = new RestTemplate();
         ExchangeRatesResponse response;
 
-        response = circuitBreaker.executeSupplier(() -> restTemplate.getForObject(url, ExchangeRatesResponse.class));
+        response =  restTemplate.getForObject(url, ExchangeRatesResponse.class);
 
         ConversionResponse resp;
 

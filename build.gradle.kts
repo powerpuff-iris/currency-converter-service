@@ -15,21 +15,28 @@ repositories {
 	mavenCentral()
 }
 
+extra["springCloudVersion"] = "2023.0.0"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	implementation("org.springframework.boot:spring-boot-starter-validation:3.2.3")
-
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-	implementation("io.github.resilience4j:resilience4j-circuitbreaker:1.7.0")
-
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
-	compileOnly("org.projectlombok:lombok:1.18.30")
-	testCompileOnly("org.projectlombok:lombok:1.18.30")
-	implementation("org.projectlombok:lombok:1.18.30")
-	annotationProcessor("org.projectlombok:lombok:1.18.30")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
+	implementation("io.github.resilience4j:resilience4j-circuitbreaker:1.7.0")
+
+	implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+	}
 }
 
 tasks.withType<Test> {
