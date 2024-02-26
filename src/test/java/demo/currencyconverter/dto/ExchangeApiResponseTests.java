@@ -6,54 +6,60 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 public class ExchangeApiResponseTests {
     @Test
-    public void testGetterSetter() {
-        // Arrange
-        ExchangeApiResponse exchangeApiResponse = new ExchangeApiResponse();
-        boolean success = true;
-        String historical = "2024-02-25";
-        String date = "2024-02-26";
-        BigDecimal result = BigDecimal.valueOf(85);
-        long timestamp = System.currentTimeMillis();
-        BigDecimal rate = BigDecimal.valueOf(0.85);
-        BigDecimal amount = BigDecimal.valueOf(100);
-        String from = "USD";
-        String to = "EUR";
+    public void testSuccess() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
+        response.setSuccess(true);
+        assertTrue(response.isSuccess());
+    }
 
-        // Act
-        exchangeApiResponse.setSuccess(success);
-        exchangeApiResponse.setHistorical(historical);
-        exchangeApiResponse.setDate(date);
-        exchangeApiResponse.setResult(result);
-
+    @Test
+    public void testQuery() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
         ExchangeApiResponse.Query query = new ExchangeApiResponse.Query();
-        query.setFrom(from);
-        query.setTo(to);
-        query.setAmount(amount);
-        exchangeApiResponse.setQuery(query);
+        query.setFrom("USD");
+        query.setTo("EUR");
+        query.setAmount(BigDecimal.valueOf(100));
+        response.setQuery(query);
+        assertEquals("USD", response.getQuery().getFrom());
+        assertEquals("EUR", response.getQuery().getTo());
+        assertEquals(BigDecimal.valueOf(100), response.getQuery().getAmount());
+    }
 
+    @Test
+    public void testInfo() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
         ExchangeApiResponse.Info info = new ExchangeApiResponse.Info();
-        info.setTimestamp(timestamp);
-        info.setRate(rate);
-        exchangeApiResponse.setInfo(info);
+        info.setTimestamp(1234567890L);
+        info.setRate(BigDecimal.valueOf(1.5));
+        response.setInfo(info);
+        assertEquals(1234567890L, response.getInfo().getTimestamp());
+        assertEquals(BigDecimal.valueOf(1.5), response.getInfo().getRate());
+    }
 
-        // Assert
-        assertNotNull(exchangeApiResponse);
-        assertEquals(success, exchangeApiResponse.isSuccess());
-        assertEquals(historical, exchangeApiResponse.getHistorical());
-        assertEquals(date, exchangeApiResponse.getDate());
-        assertEquals(result, exchangeApiResponse.getResult());
-        assertNotNull(exchangeApiResponse.getQuery());
-        assertEquals(from, exchangeApiResponse.getQuery().getFrom());
-        assertEquals(to, exchangeApiResponse.getQuery().getTo());
-        assertEquals(amount, exchangeApiResponse.getQuery().getAmount());
-        assertNotNull(exchangeApiResponse.getInfo());
-        assertEquals(timestamp, exchangeApiResponse.getInfo().getTimestamp());
-        assertEquals(rate, exchangeApiResponse.getInfo().getRate());
+    @Test
+    public void testHistorical() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
+        response.setHistorical("2024-02-25");
+        assertEquals("2024-02-25", response.getHistorical());
+    }
+
+    @Test
+    public void testDate() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
+        response.setDate("2024-02-26");
+        assertEquals("2024-02-26", response.getDate());
+    }
+
+    @Test
+    public void testResult() {
+        ExchangeApiResponse response = new ExchangeApiResponse();
+        response.setResult(BigDecimal.valueOf(150));
+        assertEquals(BigDecimal.valueOf(150), response.getResult());
     }
 }

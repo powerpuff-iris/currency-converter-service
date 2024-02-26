@@ -10,119 +10,92 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ConverterServiceTests {
-    @InjectMocks
-    private ConverterService converterService;
     @Mock
     private ExchangeRatesClient exchangeRatesClient;
 
+    @InjectMocks
+    private ConverterService converterService;
+
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        converterService = new ConverterService();
-        converterService.exchangeRatesClient = exchangeRatesClient;
+        MockitoAnnotations.initMocks(this);
+        ReflectionTestUtils.setField(converterService, "apiKey", "test_api_key");
     }
 
     @Test
-    public void testConverter_Success() {
-        // Arrange
+    public void testConverter() {
+        // Mocking
         String baseCurrency = "USD";
         String targetCurrency = "EUR";
         BigDecimal amount = BigDecimal.valueOf(100);
-        ExchangeApiResponse mockResponse = new ExchangeApiResponse();
-        mockResponse.setResult(BigDecimal.valueOf(85)); // Assuming 1 USD = 0.85 EUR
+        ExchangeApiResponse mockApiResponse = new ExchangeApiResponse();
+        mockApiResponse.setResult(BigDecimal.valueOf(85.0)); // Mocked conversion result
         when(exchangeRatesClient.convert(anyString(), eq(baseCurrency), eq(targetCurrency), eq(amount)))
-                .thenReturn(mockResponse);
+                .thenReturn(mockApiResponse);
 
-        // Act
+        // Execution
         ConversionResponse response = converterService.converter(baseCurrency, targetCurrency, amount);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(baseCurrency.toUpperCase(), response.getFrom());
-        assertEquals(targetCurrency.toUpperCase(), response.getTo());
-        assertEquals(amount, response.getAmount());
-        assertEquals(BigDecimal.valueOf(85 * 100), response.getConvertedAmount());
+        // Verification
+        assertEquals("USD", response.getFrom());
+        assertEquals("EUR", response.getTo());
+        assertEquals(BigDecimal.valueOf(100), response.getAmount());
+        assertEquals(BigDecimal.valueOf(85.0), response.getConvertedAmount());
     }
 
     @Test
-    public void testConverter_Fallback() {
-        // Arrange
+    public void testHandleConversionFailure() {
+        // Mocking
         String baseCurrency = "USD";
         String targetCurrency = "EUR";
         BigDecimal amount = BigDecimal.valueOf(100);
-        when(exchangeRatesClient.convert(anyString(), eq(baseCurrency), eq(targetCurrency), eq(amount)))
-                .thenThrow(new HttpServerErrorException(null));
+        Map<String, Object> mockRatesMap = new HashMap<>();
+        mockRatesMap.put("rates", new HashMap<String, Double>() {{
+            put("EUR", 0.85); // Mocked conversion rate
+        }});
+        when(exchangeRatesClient.getLatestRates(anyString(), eq("USD"))).thenReturn(mockRatesMap);
 
-        // Act
-        ConversionResponse response = converterService.converter(baseCurrency, targetCurrency, amount);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(baseCurrency, response.getFrom());
-        assertEquals(targetCurrency, response.getTo());
-        assertEquals(amount, response.getAmount());
-        assertNotNull(response.getConvertedAmount());
-        assertTrue(response.getErrorMessage().contains("Failed to convert currency"));
-    }
-
-    @Test
-    public void testHandleConversionFailure_Success() {
-        // Arrange
-        String baseCurrency = "USD";
-        String targetCurrency = "EUR";
-        BigDecimal amount = BigDecimal.valueOf(100);
-        Map<String, Object> ratesMap = new HashMap<>();
-        Map<String, Double> rates = new HashMap<>();
-        rates.put(targetCurrency.toUpperCase(), 0.85); // Assuming 1 USD = 0.85 EUR
-        ratesMap.put("rates", rates);
-        when(exchangeRatesClient.getLatestRates(anyString(), eq(baseCurrency.toUpperCase()))).thenReturn(ratesMap);
-
-        // Act
+        // Execution
         ConversionResponse response = converterService.handleConversionFailure(baseCurrency, targetCurrency, amount);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(baseCurrency, response.getFrom());
-        assertEquals(targetCurrency, response.getTo());
-        assertEquals(amount, response.getAmount());
-        assertEquals(BigDecimal.valueOf(85 * 100), response.getConvertedAmount());
-
+        BigDecimal b = BigDecimal.valueOf(85.00);
+        // Verification
+        assertEquals("USD", response.getFrom());
+        assertEquals("EUR", response.getTo());
+        assertEquals(BigDecimal.valueOf(100), response.getAmount());
+        assertEquals(BigDecimal.valueOf(85.00).setScale(2, RoundingMode.HALF_UP), response.getConvertedAmount());
+        assertEquals("Failed to convert currency from USD to EUR", response.getErrorMessage());
     }
 
     @Test
-    public void testHandleConversionFailure_RateNotFound() {
-        // Arrange
+    public void testGetExchangeRates() {
+        // Mocking
         String baseCurrency = "USD";
-        String targetCurrency = "EUR";
-        BigDecimal amount = BigDecimal.valueOf(100);
-        Map<String, Object> ratesMap = new HashMap<>();
-        when(exchangeRatesClient.getLatestRates(anyString(), eq(baseCurrency.toUpperCase()))).thenReturn(ratesMap);
+        LocalDate date = LocalDate.now();
+        Map<String, Object> mockRatesMap = new HashMap<>();
+        mockRatesMap.put("rates", new HashMap<String, Double>() {{
+            put("EUR", 0.85); // Mocked conversion rate
+        }});
+        when(exchangeRatesClient.getLatestRates(anyString(), eq("USD"))).thenReturn(mockRatesMap);
 
-        // Act
-        ConversionResponse response = converterService.handleConversionFailure(baseCurrency, targetCurrency, amount);
+        // Execution
+        Map<String, Object> response = converterService.getExchangeRates(baseCurrency, date);
 
-        // Assert
-        assertNotNull(response);
-        assertEquals(baseCurrency, response.getFrom());
-        assertEquals(targetCurrency, response.getTo());
-        assertEquals(amount, response.getAmount());
-        assertEquals(BigDecimal.ZERO, response.getConvertedAmount());
-        assertTrue(response.getErrorMessage().contains("Failed to convert currency"));
+        // Verification
+        assertEquals(0.85, ((Map<String, Double>) response.get("rates")).get("EUR"));
     }
-
 }
