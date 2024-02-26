@@ -13,6 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
+/**
+ * This class represents the controller for the Currency Converter API.
+ * It handles the conversion of an amount from one currency to another.
+ */
 @Tag(name = "Converter API")
 @RestController
 @CrossOrigin
@@ -21,6 +25,14 @@ public class CurrencyConverterController {
     @Autowired
     private ConverterService converterService;
 
+    /**
+     * Converts an amount from one currency to another.
+     *
+     * @param baseCurrency   The base currency code.
+     * @param targetCurrency The target currency code.
+     * @param amount         The amount to be converted.
+     * @return The conversion response containing the converted amount.
+     */
     @GetMapping("/converter")
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(description = "Converts an amount from one currency to another")

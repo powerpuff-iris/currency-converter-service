@@ -16,6 +16,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
+/**
+ * Service class for currency conversion operations.
+ */
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "exchangeRates")
@@ -26,11 +29,13 @@ public class ConverterService {
     @Autowired
     protected ExchangeRatesClient exchangeRatesClient;
 
-    // v2.0 - calling the https://api.exchangeratesapi.io/v1/convert?access_key=apiKey&from=baseCurrency&to=targetCurrency&amount=amount
-    // accepts all currencies as base currency and get the converted amount in the response
+    /**
+     * Converts the given amount from one currency to another.
+     *
+     */
     @HystrixCommand(fallbackMethod = "handleConversionFailure")
-    public  ConversionResponse converter(String baseCurrency, String targetCurrency, BigDecimal amount) {
-        ExchangeApiResponse result = exchangeRatesClient.convert( apiKey, baseCurrency, targetCurrency, amount);
+    public ConversionResponse converter(String baseCurrency, String targetCurrency, BigDecimal amount) {
+        ExchangeApiResponse result = exchangeRatesClient.convert(apiKey, baseCurrency, targetCurrency, amount);
         return ConversionResponse.builder()
                 .from(baseCurrency.toUpperCase())
                 .to(targetCurrency.toUpperCase())
@@ -39,12 +44,26 @@ public class ConverterService {
                 .build();
     }
 
-    // https://api.exchangeratesapi.io/v1/latest?access_key=apiKey for latest rates
+    /**
+     * Retrieves the exchange rates for the specified base currency and date.
+     *
+     * @param baseCurrency the base currency code
+     * @param date         the date for which to retrieve the rates
+     * @return the exchange rates
+     */
     @Cacheable(keyGenerator = "customKeyGenerator")
     public Map<String, Object> getExchangeRates(String baseCurrency, LocalDate date) {
         return exchangeRatesClient.getLatestRates(apiKey, baseCurrency.toUpperCase());
     }
 
+    /**
+     * Handles the failure of currency conversion and returns a fallback response.
+     *
+     * @param baseCurrency   the base currency code
+     * @param targetCurrency the target currency code
+     * @param amount         the amount to convert
+     * @return the fallback conversion response
+     */
     public ConversionResponse handleConversionFailure(String baseCurrency, String targetCurrency, BigDecimal amount) {
         Map<String, Object> ratesMap = getExchangeRates(baseCurrency, LocalDate.now());
         Map<String, Double> rates = (Map<String, Double>) ratesMap.get("rates");
@@ -63,32 +82,4 @@ public class ConverterService {
                 .errorMessage("Failed to convert currency from " + baseCurrency + " to " + targetCurrency)
                 .build();
     }
-
-//     v1.0 - calling the getExchangeRates and converting it manually
-//     limitation - accepts as base currency only EUR
-   /* @HystrixCommand(
-            commandProperties = {
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
-            },
-            fallbackMethod = "handleConversionFailure")
-    public ConversionResponse convertCurrency(String baseCurrency, String targetCurrency, BigDecimal amount) {
-        if (baseCurrency.equalsIgnoreCase(targetCurrency)) {
-            return ConversionResponse.builder()
-                    .from(baseCurrency.toUpperCase())
-                    .to(targetCurrency.toUpperCase())
-                    .amount(amount)
-                    .convertedAmount(amount) // No conversion needed, so the converted amount is the same as the input amount
-                    .build();
-        }
-        Map<String, Object> ratesMap = getExchangeRates(baseCurrency);
-        Map<String, Double> rates = (Map<String, Double>) ratesMap.get("rates");
-        Double rate =  rates.get(targetCurrency.toUpperCase());
-
-        return ConversionResponse.builder()
-                .from(baseCurrency.toUpperCase())
-                .to(targetCurrency.toUpperCase())
-                .amount(amount)
-                .convertedAmount(amount.multiply(BigDecimal.valueOf(rate)))
-                .build();
-    }*/
 }

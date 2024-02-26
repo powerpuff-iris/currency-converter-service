@@ -12,6 +12,9 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * GlobalExceptionHandler class handles exceptions thrown by the application and provides appropriate responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
