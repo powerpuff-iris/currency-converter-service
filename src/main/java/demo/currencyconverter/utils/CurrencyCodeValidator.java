@@ -11,7 +11,7 @@ public class CurrencyCodeValidator implements ConstraintValidator<ValidCurrencyC
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         // Check if the currency code is valid
-        return getAllCurrencies().contains(value);
+        return getAllCurrencies().contains(value.toUpperCase());
     }
 
     public static Set<String> getAllCurrencies() {

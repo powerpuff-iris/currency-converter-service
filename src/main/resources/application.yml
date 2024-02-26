@@ -12,3 +12,7 @@ api:
   exchange-rates:
     base-url: http://api.exchangeratesapi.io/v1/
     api-key: 7bbb7fb8ffdf266a01971d303324d706
+
+feign:
+  hystrix:
+    enabled: true

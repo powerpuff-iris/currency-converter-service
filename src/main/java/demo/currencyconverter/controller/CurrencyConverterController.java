@@ -28,6 +28,7 @@ public class CurrencyConverterController {
                                                       @RequestParam @ValidCurrencyCode String targetCurrency,
                                                       @RequestParam @NotNull(message = "Amount cannot be null") BigDecimal amount
     ) {
-        return ResponseEntity.ok(converterService.convert(baseCurrency, targetCurrency, amount));
+        return ResponseEntity.ok(converterService.converter(baseCurrency, targetCurrency, amount));
     }
+
 }
