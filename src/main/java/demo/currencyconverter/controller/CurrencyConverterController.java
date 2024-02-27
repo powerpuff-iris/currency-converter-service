@@ -28,8 +28,8 @@ public class CurrencyConverterController {
     /**
      * Converts an amount from one currency to another.
      *
-     * @param baseCurrency   The base currency code.
-     * @param targetCurrency The target currency code.
+     * @param from,   The base currency code.
+     * @param to The target currency code.
      * @param amount         The amount to be converted.
      * @return The conversion response containing the converted amount.
      */
