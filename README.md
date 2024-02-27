@@ -10,7 +10,7 @@ This service is a simple tool that provides real-time currency conversion rates 
 
 ## Libraries and Technologies
 
-1. **Java**
+1. **Java 17**
 2. **Spring Boot**
 3. **Spring Cache**
 4. **Feign Client**: This is a declarative web service client used to make HTTP requests to the external API for fetching exchange rates.
@@ -38,4 +38,6 @@ amount: This is the amount in the base currency that you want to convert to the 
 
 Example Usage:
 
-To convert 100 USD to EUR, you would make a GET request to the following URL: http://localhost:9000/converter?baseCurrency=USD&targetCurrency=EUR&amount=100
+To convert 100 USD to EUR, you would make a GET request to the following URL: 
+http://localhost:9000/converter?from=USD&to=EUR&amount=100
+

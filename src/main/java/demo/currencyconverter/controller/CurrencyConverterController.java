@@ -36,11 +36,11 @@ public class CurrencyConverterController {
     @GetMapping("/converter")
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(description = "Converts an amount from one currency to another")
-    public ResponseEntity<ConversionResponse> convert(@RequestParam @ValidCurrencyCode String baseCurrency,
-                                                      @RequestParam @ValidCurrencyCode String targetCurrency,
+    public ResponseEntity<ConversionResponse> convert(@RequestParam @ValidCurrencyCode String from,
+                                                      @RequestParam @ValidCurrencyCode String to,
                                                       @RequestParam @NotNull(message = "Amount cannot be null") BigDecimal amount
     ) {
-        return ResponseEntity.ok(converterService.converter(baseCurrency, targetCurrency, amount));
+        return ResponseEntity.ok(converterService.converter(from, to, amount));
     }
 
 }
